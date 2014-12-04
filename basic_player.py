@@ -157,25 +157,28 @@ class basic_player:
             #Decrease opinion of leader if you suspect mission contains a spy
             for player in extra:
                 if player == self.idx:
-                    self.opinions[current_leader] = (self.opinions[current_leader]*1.2)%1
+                    self.opinions[current_leader] = min(self.opinions[current_leader]*1.2, 1)
                 if player in sorted(self.opinions)[:len(extra)]:
                     self.opinions[current_leader] *= 0.8
+            self.opinions[self.idx] = 1
         elif phase=="vote":
             #Increase/Decrease opionion of everyone based on whether they voted with/against you
             for player in range(len(extra)):
                 if extra[player] == extra[self.idx]:
-                    self.opinions[player] = (self.opinions[player]*1.2)%1
+                    self.opinions[player] = min(self.opinions[player]*1.2, 1)
                 else:
                     self.opinions[player] *= 0.8
+            self.opinions[self.idx] = 1
         elif phase=="post-mission":
             #Increase/Decrease opinion of everyone on team (and leader) if mission passed/failed.
             if extra[0]:
                 for player in extra[1]:
-                    self.opinions[player.idx] *= 1.4
+                    self.opinions[player.idx] = min(self.opinions[player.idx]*1.4, 1)
                 if current_leader not in extra[1]:
-                    self.opinions[current_leader.idx] *= 1.4
+                    self.opinions[current_leader.idx] = min(self.opinions[current_leader.idx]*1.4, 1)
             else:
                 for player in extra[1]:
                     self.opinions[player.idx] *= 0.95
                 if current_leader not in extra[1]:
                     self.opinions[current_leader.idx] *= 0.8
+            self.opinions[self.idx] = 1
