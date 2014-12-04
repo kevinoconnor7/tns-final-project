@@ -158,7 +158,7 @@ class basic_player:
             for player in extra:
                 if player == self.idx:
                     self.opinions[current_leader] = min(self.opinions[current_leader]*1.2, 1.)
-                if player in sorted(self.opinions)[:len(extra)]:
+                if player in sorted(enumerate(self.opinions), key=lambda x:x[1])[:len(extra)]:
                     self.opinions[current_leader] *= 0.8
             self.opinions[self.idx] = 1.
         elif phase=="vote":
