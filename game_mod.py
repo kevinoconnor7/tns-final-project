@@ -58,18 +58,20 @@ class game_moderator:
             print("Invalid number of players")
             raise
 
-    def run_mission(self, cur_mission):
+    def run_mission(self, cur_mission, silent=False):
         """ This will actually run the mission index specified """
         n_votes = 0
         prop_team = []
         while (True):
-            print("Voting round %d" % n_votes)
+            if not silent:
+                print("Voting round %d" % n_votes)
             if n_votes == 6: ## vote limit, fail the mission
                 return False
             self.discuss_opinions()
             prop_team = self.team_select(self.current_leader, cur_mission)
-            for idx in prop_team:
-                print("%d: Is resistance? %s" % (idx, self.players[idx].faction))
+            if not silent:
+                for idx in prop_team:
+                    print("%d: Is resistance? %s" % (idx, self.players[idx].faction))
             for player in self.players:
                 player.cur_leader = self.current_leader
                 player.prop_team = prop_team
