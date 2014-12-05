@@ -5,7 +5,7 @@ import numpy as np
 
 class basic_player:
 
-    def __init__(self, delta=0.5):
+    def __init__(self, delta=0.25):
         self.max_opinion_diff = delta
 
     def initialize(self, faction, n_players, idx):
@@ -67,6 +67,9 @@ class basic_player:
 
         if about == self.idx or about == source:
             #TODO instead of ignoring entirely, we should just downweight it
+            return
+
+        if self.opinions[about] in [1., 0.]:
             return
 
         self_opinion = self.opinions[about] if self.faction else self.fake_opinions[about]
@@ -192,7 +195,14 @@ class basic_player:
                     self.opinions[current_leader] = min(self.opinions[current_leader]*1.4, 1.)
             else:
                 for player in team_members:
-                    self.opinions[player] *= 0.6
+                    if self.idx not in team_members:
+                        self.opinions[player] *= 0.75
+                    else:
+                        if len(team_members) > 2:
+                            self.opinions[player] *= 0.5
+                        else:
+                            self.opinions[player] = 0.
+
                 if current_leader not in extra[1]:
                     self.opinions[current_leader] *= 0.8
             self.opinions[self.idx] = 1.
