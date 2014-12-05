@@ -4,6 +4,10 @@
 import numpy as np
 
 class basic_player:
+
+    def __init__(self, delta=0.5):
+        self.max_opinion_diff = delta
+
     def initialize(self, faction, n_players, idx):
         self.faction = faction # True for resistance, False for spy
         self.idx = idx
