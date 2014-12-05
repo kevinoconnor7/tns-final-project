@@ -20,7 +20,6 @@ class basic_player:
             self.fake_opinions[self.idx] = 1.
         self.weights = self.init_weights(n_players)
         self.game_history = []
-        self.max_opinion_diff = .5
         self.history = []
 
     def init_opinions(self, n, am_spy=False):

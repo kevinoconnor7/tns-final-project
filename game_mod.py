@@ -65,7 +65,7 @@ class game_moderator:
             print("Invalid number of players")
             raise
 
-    def run_mission(self, cur_mission, silent=False):
+    def run_mission(self, cur_mission, mission_num, silent=False):
         """ This will actually run the mission index specified """
         n_votes = 0
         prop_team = []
@@ -74,16 +74,20 @@ class game_moderator:
         op_str = lambda op: "[%s]" %  ' '.join(["%0.2f"%o for o in op])
 
         if not silent:
-            print_ops("mission start")
+            if mission_num > 0:
+                print_ops("mission start")
+            else:
+                print_ops("game start")
         while (True):
             if not silent:
                 print("Voting round %d" % n_votes)
                 print("Lead by %d" % self.current_leader)
             if n_votes == 6: ## vote limit, fail the mission
                 return False
-            self.discuss_opinions(self.max_iter)
-            if not silent:
-                print_ops("inital discussion")
+            if mission_num > 0:
+                self.discuss_opinions(self.max_iter)
+                if not silent:
+                    print_ops("inital discussion")
             prop_team = self.team_select(self.current_leader, cur_mission)
             if not silent:
                 for idx in prop_team:
@@ -173,7 +177,7 @@ class game_moderator:
         for player in self.players:
             votes.append(player.vote_on_select(prop_team, cur_mission, last_vote))
 
-        vote_passed = len([x for x in votes if x]) > self.n_players/2
+        vote_passed = len([x for x in votes if x]) > self.n_players//2
         return vote_passed, votes
 
     def execute_mission(self, prop_team):
