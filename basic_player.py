@@ -160,7 +160,7 @@ class basic_player:
                     self.opinions[current_leader] = min(self.opinions[current_leader]*1.2, 1)
                 if player in sorted(self.opinions)[:len(extra)]:
                     self.opinions[current_leader] *= 0.8
-            self.opinions[self.idx] = 1
+            self.opinions[self.idx] = 1.
         elif phase=="vote":
             #Increase/Decrease opionion of everyone based on whether they voted with/against you
             for player in range(len(extra)):
@@ -168,7 +168,7 @@ class basic_player:
                     self.opinions[player] = min(self.opinions[player]*1.2, 1)
                 else:
                     self.opinions[player] *= 0.8
-            self.opinions[self.idx] = 1
+            self.opinions[self.idx] = 1.
         elif phase=="post-mission":
             #Increase/Decrease opinion of everyone on team (and leader) if mission passed/failed.
             if extra[0]:
@@ -181,4 +181,4 @@ class basic_player:
                     self.opinions[player.idx] *= 0.95
                 if current_leader not in extra[1]:
                     self.opinions[current_leader.idx] *= 0.8
-            self.opinions[self.idx] = 1
+            self.opinions[self.idx] = 1.
