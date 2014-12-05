@@ -79,7 +79,13 @@ class basic_player:
             self.weights.append(ith_weights)
 
         new_opinions = np.array(self.weights)*all_opinions
+        old_opinions = self.opinions
         self.opinions = new_opinions.T[self.idx]
+
+        diff_opinions = [abs(old_opinions[i] - self.opinions[i]) for i in range(len(self.opinions))]
+
+        # Return whether we feel okay stopping now
+        return max(diff_opinions) < 0.005
 
     def calc_percv_opinion(self):
         """ Based on self.opinions, other player's (perceived) opinions and the game history,

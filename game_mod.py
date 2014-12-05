@@ -16,7 +16,7 @@ import numpy as np
 #   execute_mission
 #   recalculate_opinion
 class game_moderator:
-    def __init__(self, players):
+    def __init__(self, players, max_iter=None):
         """ Give the game moderator a list of instantiated players """
         self.players = []
         self.n_players = len(players)
@@ -36,6 +36,7 @@ class game_moderator:
             self.players.append(player)
         self.missions = self.get_missions()
         self.current_leader = 0
+        self.max_iter = max_iter
 
         spies = [player.idx for player in self.players if not player.faction]
         for player in self.players:
@@ -58,25 +59,27 @@ class game_moderator:
             print("Invalid number of players")
             raise
 
-    def run_mission(self, cur_mission):
+    def run_mission(self, cur_mission, silent=False):
         """ This will actually run the mission index specified """
         n_votes = 0
         prop_team = []
         while (True):
-            print("Voting round %d" % n_votes)
+            if not silent:
+                print("Voting round %d" % n_votes)
             if n_votes == 6: ## vote limit, fail the mission
                 return False
-            self.discuss_opinions()
+            self.discuss_opinions(self.max_iter)
             prop_team = self.team_select(self.current_leader, cur_mission)
-            for idx in prop_team:
-                print("%d: Is resistance? %s" % (idx, self.players[idx].faction))
+            if not silent:
+                for idx in prop_team:
+                    print("%d: Is resistance? %s" % (idx, self.players[idx].faction))
             for player in self.players:
                 player.cur_leader = self.current_leader
                 player.prop_team = prop_team
                 player.cur_mission = cur_mission
                 player.vote_num = n_votes
             self.recalc_opinions(phase="team_sel", extra=prop_team)
-            self.discuss_opinions()
+            self.discuss_opinions(self.max_iter)
             vote_passed, votes = self.get_votes(prop_team, cur_mission, n_votes == 5)
             self.recalc_opinions(phase="vote",extra=votes)
             if vote_passed:
@@ -99,12 +102,26 @@ class game_moderator:
     def discuss_opinions(self, n_iter=None):
         """ This function takes each player's perceived opinions and broadcasts them to every player for
         in a random order. If n_iter is not specified, it will try to run until convergence """
-        opinions = []
-        for player in self.players:
-            opinions.append(player.calc_percv_opinion())
+        last_opinions = None
 
-        for player in self.players:
-            player.calc_real_opinion(opinions)
+        run_to_conv = True if n_iter is None else False
+        if n_iter is None:
+            n_iter = 0
+
+        while run_to_conv or n_iter > 0:
+            opinions = []
+            is_done = 0
+
+            for player in self.players:
+                opinions.append(player.calc_percv_opinion())
+
+            for player in self.players:
+                is_done += player.calc_real_opinion(opinions)
+
+            if is_done == self.n_players:
+                break
+
+            n_iter = abs(int(n_iter) - 1)
 
     def team_select(self, current_leader, current_mission):
         """ This function just calls the current leader's team_select function, which returns the proposed team"""
