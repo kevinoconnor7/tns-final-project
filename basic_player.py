@@ -28,7 +28,7 @@ class basic_player:
                 opin[idx] = 0.
         else:
             for i in range(n):
-                opin.append(np.random.rand()*.2+.4)
+                opin.append(np.random.rand()*.04+.48)
 
         opin[self.idx] = float(self.faction)
 
@@ -65,7 +65,7 @@ class basic_player:
             return
 
         for i in range(len(neighbor_input)):
-            if i == self.idx:
+            if i == self.idx or i == source:
                 continue
 
             if abs(self.opinions[i] - neighbor_input[i]) <= self.max_opinion_diff:
@@ -81,7 +81,9 @@ class basic_player:
         if self.faction:
             return self.opinions
         else:
-            opin = np.random.rand(len(self.opinions))
+            opin = []
+            for i in range(len(self.opinions)):
+                opin.append(np.random.rand()*.04+.48)
             opin[self.idx] = 1
             return opin
             #return [0.5]*len(self.opinions)
@@ -150,6 +152,7 @@ class basic_player:
 
     def recalc_opinion(self, current_leader, phase=None, extra=None):
         """ This function recalculates opinions for the phases: team_sel, votes, post_mission """
+
         if not self.faction:
             return
         #TODO
@@ -169,16 +172,18 @@ class basic_player:
                 else:
                     self.opinions[player] *= 0.8
             self.opinions[self.idx] = 1.
-        elif phase=="post-mission":
+        elif phase=="post_mission":
             #Increase/Decrease opinion of everyone on team (and leader) if mission passed/failed.
-            if extra[0]:
-                for player in extra[1]:
-                    self.opinions[player.idx] = min(self.opinions[player.idx]*1.4, 1.)
+            mission_success, team_members = extra
+
+            if mission_success:
+                for player in team_members:
+                    self.opinions[player] = min(self.opinions[player]*1.4, 1.)
                 if current_leader not in extra[1]:
-                    self.opinions[current_leader.idx] = min(self.opinions[current_leader.idx]*1.4, 1.)
+                    self.opinions[current_leader] = min(self.opinions[current_leader]*1.4, 1.)
             else:
-                for player in extra[1]:
-                    self.opinions[player.idx] *= 0.95
+                for player in team_members:
+                    self.opinions[player] *= 0.6
                 if current_leader not in extra[1]:
-                    self.opinions[current_leader.idx] *= 0.8
+                    self.opinions[current_leader] *= 0.8
             self.opinions[self.idx] = 1.

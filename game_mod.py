@@ -154,3 +154,9 @@ class game_moderator:
             else:
                 n_fail += 1
         return n_pass, n_fail
+
+    def print_player_real_opinions(self):
+        print "---------- Opinions ----------"
+        for player in self.players:
+            print player.opinions
+        print "------------------------------"
