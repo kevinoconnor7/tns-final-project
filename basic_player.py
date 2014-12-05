@@ -5,8 +5,9 @@ import numpy as np
 
 class basic_player:
 
-    def __init__(self, delta=0.25):
+    def __init__(self, delta=0.25, g=0.5):
         self.max_opinion_diff = delta
+        self.g = g
 
     def initialize(self, faction, n_players, idx):
         self.faction = faction # True for resistance, False for spy
@@ -76,7 +77,7 @@ class basic_player:
         self_opinion = self.opinions[about] if self.faction else self.fake_opinions[about]
 
         if abs(self_opinion - opinion) <= self.max_opinion_diff:
-            new_opinion = self_opinion*.5 + opinion*.5
+            new_opinion = self_opinion*self.g + opinion*(1-self.g)
             if self.faction:
                 self.opinions[about] = new_opinion
             else:
