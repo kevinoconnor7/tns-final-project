@@ -99,7 +99,7 @@ class game_moderator:
         self.current_leader = (self.current_leader+1) % self.n_players
         return mission_result
 
-    def discuss_opinions(self, n_iter=None):
+    def discuss_opinions(self, n_iter=100):
         """ This function takes each player's perceived opinions and broadcasts them to every player for
         in a random order. If n_iter is not specified, it will try to run until convergence """
         last_opinions = None
@@ -108,18 +108,21 @@ class game_moderator:
         if n_iter is None:
             n_iter = 0
 
+        shuffled_players = np.arange(self.n_players)
+
         while run_to_conv or n_iter > 0:
             opinions = []
             is_done = 0
 
-            for player in self.players:
-                opinions.append(player.calc_percv_opinion())
+            np.random.shuffle(shuffled_players)
 
-            for player in self.players:
-                is_done += player.calc_real_opinion(opinions)
+            for p in shuffled_players:
+                p_opinion = self.players[p].calc_percv_opinion()
 
-            if is_done == self.n_players:
-                break
+                for player in self.players:
+                    if player.idx == p:
+                        continue
+                    player.calc_real_opinion(p_opinion, p)
 
             n_iter = abs(int(n_iter) - 1)
 

@@ -44,7 +44,7 @@ class basic_player:
         return weight_lists
 
 
-    def calc_real_opinion(self, neighbor_input):
+    def calc_real_opinion(self, neighbor_input, source):
         """ This function is called iteratively during the 'discussion' phase. neighbor_input is going to be a list of
         input vectors and the (perceived) opinions given for each player """
         # The base player is going to use the bounded confidence model if resistance
@@ -52,36 +52,21 @@ class basic_player:
         # instead hold a fake opinion that mirrors its resistance strategy
 
         # Save what we hear into history
-        self.history.append(neighbor_input)
+        #self.history.append(neighbor_input)
 
-        all_opinions = np.array(neighbor_input).T
-        self.weights = []
-        for i in range(len(all_opinions)):
+        if self.idx == source:
+            return
+
+        if not self.faction:
+            return
+
+        for i in range(len(neighbor_input)):
             if i == self.idx:
-                self.weights.append([0 if i!=self.idx else 1 for z in range(len(all_opinions))])
                 continue
 
-            ith_weights = []
-            within_range = 0
-            for j in range(len(all_opinions[i])):
-                if abs(self.opinions[j] - all_opinions[i][j]) <= self.max_opinion_diff:
-                    within_range += 1
+            if abs(self.opinions[i] - neighbor_input[i]) <= self.max_opinion_diff:
+                self.opinions[i] = self.opinions[i]*.5 + neighbor_input[i]*.5
 
-            for j in range(len(all_opinions[i])):
-                if abs(self.opinions[j] - all_opinions[i][j]) <= self.max_opinion_diff:
-                    ith_weights.append(1./within_range)
-                else:
-                    ith_weights.append(0)
-            self.weights.append(ith_weights)
-
-        new_opinions = np.array(self.weights)*all_opinions
-        old_opinions = self.opinions
-        self.opinions = new_opinions.T[self.idx]
-
-        diff_opinions = [abs(old_opinions[i] - self.opinions[i]) for i in range(len(self.opinions))]
-
-        # Return whether we feel okay stopping now
-        return max(diff_opinions) < 0.005
 
     def calc_percv_opinion(self):
         """ Based on self.opinions, other player's (perceived) opinions and the game history,
@@ -148,7 +133,7 @@ class basic_player:
 
     def set_spies(self, spies):
         self.spies = spies
-        self.init_opinions(self.n_players)
+        self.opinions = self.init_opinions(self.n_players)
 
     def execute_mission(self):
         """ This is called when a player is selected for a mission. A resistance player will always pass
