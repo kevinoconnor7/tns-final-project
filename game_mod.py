@@ -1,3 +1,4 @@
+from __future__ import division, print_function
 import numpy as np
 
 # Framework: the game will proceed in phases
@@ -42,6 +43,11 @@ class game_moderator:
         for player in self.players:
             if not player.faction:
                 player.set_spies(spies)
+
+        """
+        for player in self.players:
+            print("Initial opinions for player %d (%s) %r" % (player.idx, "res" if player.faction else "spy", player.opinions))
+        """
 
     def get_missions(self):
         """ Returns a list of 5 missions according to the game rules for the given number of players """
@@ -117,7 +123,8 @@ class game_moderator:
             np.random.shuffle(shuffled_players)
 
             for p in shuffled_players:
-                p_opinion = self.players[p].calc_percv_opinion()
+                talk_about = np.random.choice(shuffled_players)  # TODO choose players some other way than just uniformly random
+                p_opinion = (talk_about, self.players[p].calc_percv_opinion(talk_about))
 
                 for player in self.players:
                     if player.idx == p:
@@ -156,7 +163,7 @@ class game_moderator:
         return n_pass, n_fail
 
     def print_player_real_opinions(self):
-        print "---------- Opinions ----------"
+        print("---------- Opinions ----------")
         for player in self.players:
-            print player.opinions
-        print "------------------------------"
+            print(player.opinions)
+        print("------------------------------")

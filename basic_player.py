@@ -13,16 +13,18 @@ class basic_player:
         self.idx = idx
         self.n_players = n_players
         self.spies = []
-        self.opinions = self.init_opinions(n_players)
+        self.opinions = self.init_opinions(n_players, am_spy=(not self.faction))
+        if not self.faction:
+            self.fake_opinions = self.init_opinions(n_players)
         self.weights = self.init_weights(n_players)
         self.game_history = []
         self.max_opinion_diff = .5
         self.history = []
 
-    def init_opinions(self, n):
+    def init_opinions(self, n, am_spy=False):
         """ Figures out the initial opinions of each n players. Base player does uniformly 0.5 """
         opin = []
-        if len(self.spies):
+        if am_spy:
             opin = [1.] * n
             for idx in self.spies:
                 opin[idx] = 0.
@@ -49,8 +51,8 @@ class basic_player:
 
 
     def calc_real_opinion(self, neighbor_input, source):
-        """ This function is called iteratively during the 'discussion' phase. neighbor_input is going to be a list of
-        input vectors and the (perceived) opinions given for each player """
+        """ This function is called iteratively during the 'discussion' phase. neighbor_input is going to be a tuple of
+        who the opinion is about and what it is """
         # The base player is going to use the bounded confidence model if resistance
         # if it's a spy, it should not update its own opinions (as it knows the truth) but
         # instead hold a fake opinion that mirrors its resistance strategy
@@ -61,33 +63,40 @@ class basic_player:
         if self.idx == source:
             return
 
-        if not self.faction:
+        about, opinion = neighbor_input
+
+        if about == self.idx or about == source:
+            #TODO instead of ignoring entirely, we should just downweight it
             return
 
-        for i in range(len(neighbor_input)):
-            if i == self.idx or i == source:
-                continue
+        self_opinion = self.opinions[about] if self.faction else self.fake_opinions[about]
 
-            if abs(self.opinions[i] - neighbor_input[i]) <= self.max_opinion_diff:
-                self.opinions[i] = self.opinions[i]*.5 + neighbor_input[i]*.5
+        if abs(self_opinion - opinion) <= self.max_opinion_diff:
+            new_opinion = self_opinion*.5 + opinion*.5
+            if self.faction:
+                self.opinions[about] = new_opinion
+            else:
+                self.fake_opinions[about] = new_opinion
 
 
-    def calc_percv_opinion(self):
+    def calc_percv_opinion(self, about_player):
         """ Based on self.opinions, other player's (perceived) opinions and the game history,
         come up with an opinion that the player wants others players to perceive. """
 
         # The base player can simply return their actual opinion if they're resistance, or the
         # aforementioned fake opinion if they're a spy
         if self.faction:
-            return self.opinions
+            return self.opinions[about_player]
         else:
+            return self.fake_opinions[about_player]
+        """
             opin = []
             for i in range(len(self.opinions)):
                 opin.append(np.random.rand()*.04+.48)
             opin[self.idx] = 1
             return opin
             #return [0.5]*len(self.opinions)
-        pass
+        """
 
     def team_select(self, mission_details):
         """ This is called iff the player is called on to select other players for a mission. It is given the
@@ -139,7 +148,7 @@ class basic_player:
 
     def set_spies(self, spies):
         self.spies = spies
-        self.opinions = self.init_opinions(self.n_players)
+        self.opinions = self.init_opinions(self.n_players, am_spy=(not self.faction))
 
     def execute_mission(self):
         """ This is called when a player is selected for a mission. A resistance player will always pass
