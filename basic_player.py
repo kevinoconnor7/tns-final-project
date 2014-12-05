@@ -137,10 +137,10 @@ class basic_player:
         n_suspected_spies = 0
         n_suspected_resistance = 0
 
-        median_opinion = np.median(self.opinions)
+        median_opinion = np.median([self.opinions[i] for i in team])
 
         for i in team:
-            if self.opinions[i] < median_opinion:
+            if median_opinion - self.opinions[i] >= 0.2:
                 n_suspected_spies += 1
             else:
                 n_suspected_resistance += 1
