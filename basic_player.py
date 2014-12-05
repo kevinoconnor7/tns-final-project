@@ -16,6 +16,7 @@ class basic_player:
         self.opinions = self.init_opinions(n_players, am_spy=(not self.faction))
         if not self.faction:
             self.fake_opinions = self.init_opinions(n_players)
+            self.fake_opinions[self.idx] = 1.
         self.weights = self.init_weights(n_players)
         self.game_history = []
         self.max_opinion_diff = .5
@@ -166,7 +167,8 @@ class basic_player:
         """ This function recalculates opinions for the phases: team_sel, votes, post_mission """
 
         if not self.faction:
-            return
+            temp = self.opinions.copy()
+            self.opinions = self.fake_opinions.copy()
         #TODO
         if phase=="team_sel":
             #Decrease opinion of leader if you suspect mission contains a spy
@@ -206,3 +208,8 @@ class basic_player:
                 if current_leader not in extra[1]:
                     self.opinions[current_leader] *= 0.8
             self.opinions[self.idx] = 1.
+
+        if not self.faction:
+            self.fake_opinions = self.opinions.copy()
+            self.opinions = temp.copy()
+

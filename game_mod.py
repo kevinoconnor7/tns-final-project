@@ -69,12 +69,21 @@ class game_moderator:
         """ This will actually run the mission index specified """
         n_votes = 0
         prop_team = []
+        print_ops = lambda extra: print("Opinions after %s: \n%s" % (extra,
+            '\n'.join(["%d real op %s" % (p.idx, op_str(p.opinions)) + ('' if p.faction else " / fake op %s" % op_str(p.fake_opinions)) for p in self.players])))
+        op_str = lambda op: "[%s]" %  ' '.join(["%0.2f"%o for o in op])
+
+        if not silent:
+            print_ops("mission start")
         while (True):
             if not silent:
                 print("Voting round %d" % n_votes)
+                print("Lead by %d" % self.current_leader)
             if n_votes == 6: ## vote limit, fail the mission
                 return False
             self.discuss_opinions(self.max_iter)
+            if not silent:
+                print_ops("inital discussion")
             prop_team = self.team_select(self.current_leader, cur_mission)
             if not silent:
                 for idx in prop_team:
@@ -85,12 +94,22 @@ class game_moderator:
                 player.cur_mission = cur_mission
                 player.vote_num = n_votes
             self.recalc_opinions(phase="team_sel", extra=prop_team)
+            if not silent:
+                print_ops("team selection")
             self.discuss_opinions(self.max_iter)
+            if not silent:
+                print_ops("2nd discussion")
             vote_passed, votes = self.get_votes(prop_team, cur_mission, n_votes == 5)
             self.recalc_opinions(phase="vote",extra=votes)
+            if not silent:
+                print_ops("vote")
             if vote_passed:
+                if not silent:
+                    print("Vote succeeded with team %s" % str(prop_team))
                 break
             else:
+                if not silent:
+                    print("Vote failed for team %s" % str(prop_team))
                 self.current_leader += 1
                 self.current_leader %= self.n_players
                 n_votes += 1
@@ -102,6 +121,8 @@ class game_moderator:
         mission_result = n_fail < cur_mission[1]
 
         self.recalc_opinions(phase="post_mission",extra=(mission_result, prop_team))
+        if not silent:
+            print_ops("mission")
         self.current_leader = (self.current_leader+1) % self.n_players
         return mission_result
 
@@ -111,19 +132,23 @@ class game_moderator:
         last_opinions = None
 
         run_to_conv = True if n_iter is None else False
+        n_iter *= self.n_players
         if n_iter is None:
             n_iter = 0
 
         shuffled_players = np.arange(self.n_players)
+        about_players = np.arange(self.n_players)
 
         while run_to_conv or n_iter > 0:
             opinions = []
             is_done = 0
 
             np.random.shuffle(shuffled_players)
+            np.random.shuffle(about_players)
 
-            for p in shuffled_players:
-                talk_about = np.random.choice(shuffled_players)  # TODO choose players some other way than just uniformly random
+            for p,talk_about in zip(shuffled_players,about_players):
+                # talk_about = np.random.choice(shuffled_players)
+                # TODO choose players some other way than just uniformly random
                 p_opinion = (talk_about, self.players[p].calc_percv_opinion(talk_about))
 
                 for player in self.players:
